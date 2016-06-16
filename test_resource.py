@@ -1,4 +1,4 @@
-import unittest, responses
+import unittest, responses, json
 from resource import Resource, API
 
 class FooAPI(API):
@@ -45,7 +45,6 @@ class ResourceTestCase(unittest.TestCase):
 				'Expected {} with keys: {} to be: {}, but it was: {}' \
 					. format (url, keys, expected_url, actual_url)
 
-
 class ResourceGetTestCase(unittest.TestCase):
 
 	def setUp(self):
@@ -64,28 +63,41 @@ class ResourceGetTestCase(unittest.TestCase):
 	@responses.activate
 	def test_get_custom_headers(self):
 
-		responses.add(responses.GET, 'https://api.foo.com/api/v1/test/123',
-                  body='{"some": "result"}', status=200,
-                  content_type='application/json')
+		responses.add(responses.GET, 'https://api.foo.com/api/v1/test/123')
 
 		keys = {"user":"test", "id":123}
 		result = self.resource.get(keys, headers= {"baz": "bus"})
 
 		responses.calls[0].request.headers['foo'] == 'bar'
-		responses.calls[0].request.headers['baz'] == 'bus'
+		responses.calls[0].request.headers['baz'] == 'bus'	
 
-	def test_result_populates_objects_list_if_top_level_result_is_list(self):
-		result_json = [
-			{"first_name": "John", "last_name": "Snow"},
-			{"first_name": "Daenerys", "last_name": "Targaryen"},
-			{"first_name": "Sansa", "last_name": "Start"},
-			{"first_name": "Cersei", "last_name": "Lannnister"},
-		]
+	@responses.activate
+	def test_get_with_basic_auth(self):
+		responses.add(responses.GET, 'https://api.foo.com/api/v1/test/123')
 
-		responses.add(responses.GET, 'https://api.foo.com/api/v1/test/123',
+		keys = {"user":"test", "id":123}
+		extra_args = {"auth": ('username','password')}
+		result = self.resource.get(keys, **extra_args)
+
+		call = responses.calls[0]
+		
+		assert call.request.headers.get('Authorization') == 'Basic dXNlcm5hbWU6cGFzc3dvcmQ='
+
+
+	@responses.activate
+	def test_can_define_custom_resource_path_for_method(self):
+		
+		class MultiPathResource(Resource):
+			resource_path = '/api/v1/{user}/{id}'
+			get_resource_path = '/special/get/endpoint/{id}'
+			api_class=FooAPI
+
+		responses.add(responses.GET, 'https://api.foo.com/special/get/endpoint/123',
                   body='{"some": "result"}', status=200,
                   content_type='application/json')
 
+		resource = MultiPathResource()
+		resource.get({"id": "123"})
 
 class ResourceQueryTestCase(unittest.TestCase):
 
@@ -102,7 +114,7 @@ class ResourceQueryTestCase(unittest.TestCase):
 			{"id": 2},
 			{"id": 3},
 		]
-		responses.add(responses.GET, expected_url, body=response, status=200)
+		responses.add(responses.GET, expected_url, body=json.dumps(response), status=200)
 		qs = "?q=a%3D1%3Ab%3D2&s=something"
 		keys = {'user': 'test'}
 		params = {'q': 'a=1:b=2', 's': 'something'}
@@ -120,12 +132,54 @@ class ResourceQueryTestCase(unittest.TestCase):
 
 class ResourceCreateTestCase(unittest.TestCase):
 
+	@responses.activate
+	def test_create_simple_resource_with_data(self):
+
+		responses.add(responses.POST, "https://api.foo.com/api/v1/foo/")
+		data = {"first_name": "John", "last_name": "Snow"}
+		repo = SimpleResource().create(data)
+
+	@responses.activate
+	def test_create_with_custom_resource_path(self):
+
+		responses.add(responses.POST, "https://api.foo.com/special/create/endpoint")
+
+		class MultiPathResource(Resource):
+			resource_path = '/api/v1/{user}/{id}'
+			create_resource_path = '/special/create/endpoint'
+			api_class=FooAPI
+
+		data = {"foo": "bar"}
+		MultiPathResource().create(data)
+
+class ResourceUpdateTestCase(unittest.TestCase):
+
 	def setUp(self):
 		self.resource = SimpleResource()
 
-	def test_create_simple_resource_with_data(self):
+	@responses.activate
+	def test_update(self):
 		
-		self.resource.create(data)
+		responses.add(responses.PUT, "https://api.foo.com/api/v1/foo/123")		
+		result = self.resource.update(keys={"id": 123}, data={"foo":"bar"})
+		call = responses.calls[0]
+		assert call.request.body == '{"foo": "bar"}'
+
+	@responses.activate
+	def test_partial_update(self):
+		
+		responses.add(responses.PATCH, "https://api.foo.com/api/v1/foo/123")		
+		result = self.resource.partial_update(keys={"id": 123}, data={"foo":"bar"})
+		call = responses.calls[0]
+		assert call.request.body == '{"foo": "bar"}'
+
+class ResourceDeleteTestCase(unittest.TestCase):
+
+	@responses.activate
+	def test_delete_simple_resource_with_data(self):
+
+		responses.add(responses.DELETE, "https://api.foo.com/api/v1/foo/123")
+		repo = SimpleResource().delete({"id": 123})
 
 
 if __name__ == '__main__':
