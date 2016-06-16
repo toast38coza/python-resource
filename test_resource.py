@@ -104,9 +104,14 @@ class ResourceQueryTestCase(unittest.TestCase):
 		result = self.resource.list(keys=keys, params=params)
 
 		call = responses.calls[0]
-		full_url = 'https://api.foo.com/api/v1/test/?q=a%3D1%3Ab%3D2&s=something'
-		assert call.request.url == full_url, \
-			"Expected {} to be {}" . format (call.request.url, full_url)
+
+		expected_params = [
+			'q=a%3D1%3Ab%3D2',
+			's=something'
+		]
+		for param in expected_params:
+			assert param in call.request.url, \
+				"Expected {} to be in {}" . format (param, call.request.url)
 
 class ResourceCreateTestCase(unittest.TestCase):
 
