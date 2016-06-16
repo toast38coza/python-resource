@@ -1,5 +1,8 @@
 ## Usage
 
+<a href="https://codeclimate.com/github/toast38coza/python-resource"><img src="https://codeclimate.com/github/toast38coza/python-resource/badges/gpa.svg" /></a>
+
+
 **api.py**
 
 ```
