@@ -10,56 +10,87 @@ pip install py-resource
 <a href="https://codeclimate.com/github/toast38coza/python-resource"><img src="https://codeclimate.com/github/toast38coza/python-resource/badges/gpa.svg" /></a>
 [![Build Status](https://travis-ci.org/toast38coza/python-resource.svg?branch=master)](https://travis-ci.org/toast38coza/python-resource)
 
+
+## Example Usage
+
+**Define the API you want to consume:**
+
 **api.py**
 
-```
-from resource import API, Resource
+```python
 
 class GithubAPI(API):
-  base_url='..'
-  token_headers='..'
-  headers={}
+	base_url = "https://api.github.com"
+	headers = {"Authorization": "token {}" . format (os.environ.get('token'))}
 
-
-@allowed_methods=['get','put','post','delete']
-class RepositoryResource(Resource)
-  api_class = 'GitHubAPI'
-  path = "/users/{user}/repos/{repo}"
-  # optional
-  authentication_class = 'resources.authentication.{Token,Basic,None:default('None')}' # or provide your own
-  # for validation
-  required_fields = []
-  # for accessing like an object
-  fields = []
-
-data = {
-  "token": "..",
-}
-repo_resource - RepositoryResource(**data)
-repos = repo_resource.query()
-repo = repo_resource.get(user='toast38coza', repo='PyResource')
-repo.homepage = "http://pyresource.github.io"
-repo.save()
-
-# create a new repo: 
-
-data = {
-  ..
-}
-repo = Repo.save(**data)
-
-## or: 
-
-repo = Repo()
-repo.name = '..'
+class RepositoryRepo(Resource):
+	api_class = GithubAPI
+	resource_path = "/repos/{owner}/{repo}"
+	
+	# you only need to define resource_path, but 
+	# if you need to, you can specify other paths too
+	create_resource_path = "/user/repos"
+	list_resource_path = "/users/{owner}/repos"
+	
 ..
-repo.save()
-
-# will perform a query with `search_params`, if no results return, will create. Else: update
-repo.create_or_update(search_params={}, data={})
 ```
 
-**Extra goodies:**
+**Now you can consume it:**
+
+**List**
+```python
+keys = {"owner": user}
+repos = RepositoryRepo().list(keys=keys)
+```
+
+**Get a repo:**
+```python
+keys = {"owner": owner, "repo": name}
+repo = RepositoryRepo().get(keys=keys)
+```
+
+**Create a resource**
+```python
+data = {"name": repo_name}
+repo = RepositoryRepo().create(data)
+```
+
+**Partial update: (PATCH)**
+
+```python
+keys = {"owner": owner, "repo": repo}
+data = {
+	"name": repo,
+	"private": private
+	}
+result = RepositoryRepo().partial_update(keys=keys, data=data)
+```
+
+**Update: (PUT)**
+
+```python
+keys = {"owner": owner, "repo": repo}
+data = {
+	"name": repo,
+	"private": private
+}
+result = RepositoryRepo().update(keys=keys, data=data)
+```
+
+**Delete**
+
+```python
+keys = {"owner": owner, "repo": repo}
+result = RepositoryRepo().delete(keys=keys)
+```
+
+### Coming soon: 
+
+* add `update_or_create(keys, data, search_fields)`
+
+
+
+**Extra goodies (todo):**
 
 * Generate slate docs 
   * Generate entire docs
@@ -68,48 +99,43 @@ repo.create_or_update(search_params={}, data={})
 * Build Resources from API
 * Install available clients
 
-**Spec**
+**Features:**
 
 It can:
 
 **Basics:**
 
-* GET a resource
-* update a resource
-* create a resource
-* delete a resource
-* update_or_create a resource if it doesnt exist
-* can query a list endpoint
-* provides access to the raw response
-* maps JSON map to a Python object for ease of access
-* supports nested json objects
+- [x] GET a resource
+- [x] update a resource
+- [x] create a resource
+- [x] delete a resource
+- [ ] update_or_create a resource if it doesnt exist
+- [x] can query a list endpoint
+- [x] provides access to the raw response
+- [x] maps JSON map to a Python object for ease of access
+- [ ] supports nested json objects
 
 **Authentication and security**
 
-* authenticate with token auth
-* authenticate with basic auth
-* limit verbs that are available 
+- [x] authenticate with token auth
+- [x] authenticate with basic auth
+
 
 **Meta and ease of use**
 
-* Can provide useful information if missing fields are not included
-* Can print what a request would look like as 
+- [ ] Can provide useful information if missing fields are not included
+- [ ] Can print what a request would look like as 
   * curl: `resource.get(out='curl')`
   * python: `resource.get(out='python')`
   * javascript: `resource.get(out='js')`  
   * ..
-* Generate Slate-style docs (`python -m resources.cli generate docs`)
-* Generate Slate-style mocks (`python -m resources.cli generate mocks`)
+- [ ] Generate Slate-style docs (`python -m resources.cli generate docs`)
+- [ ] Generate Slate-style mocks (`python -m resources.cli generate mocks`)
 
 
 **Low level**
 
-* Accept custom headers
-* Accept custom params
-* Accept custom credentials
-* Optionally pass any kwargs prefixed with `requests__` to requests constructor
-
-
-**Restrictions**
-
-* Only works on RESTful APIs which communicate over JSON
+- [x] Accept custom headers
+- [x] Accept custom params
+- [x] Accept custom credentials
+- [x] Optionally pass any kwargs to requests constructor
