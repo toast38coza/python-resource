@@ -1,0 +1,9 @@
+tox
+discover
+responses
+sphinx
+sphinx_rtd_theme
+sphinx-autobuild
+recommonmark
+ipython
+ipdb
