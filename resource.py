@@ -28,8 +28,6 @@ class Response(object):
 			else:
 				self.resource = self.dict_to_resource_item(response.json())
 
-
-
 	def dict_to_resource_item(self, dict_item):
 		"""
 		Takes a dictionary. e.g.: {'foo': 'bar'}
@@ -64,7 +62,6 @@ class Resource(object):
 		path = path . format(**keys)
 		return "{}{}" . format (self.base_url, path)
 
-
 	def get(self, keys, params = {}, headers={}, *args, **kwargs):
 
 		request_headers = self.headers.copy()
@@ -79,7 +76,8 @@ class Resource(object):
 	def list(self, keys = {}, params = {}, headers={}, *args, **kwargs):
 		request_headers = self.headers.copy()
 		url = self.get_url(self.resource_path, keys)
-		return requests.get(url, headers=request_headers, params=params)
+		http_response = requests.get(url, headers=request_headers, params=params)
+		return Response(http_response)
 
 	def create(self, data, keys = {}, params = {}, headers={}, *args, **kwargs):
 		pass

@@ -97,7 +97,12 @@ class ResourceQueryTestCase(unittest.TestCase):
 	def test_query(self):
 
 		expected_url = "https://api.foo.com/api/v1/test/"
-		responses.add(responses.GET, expected_url)
+		response = [
+			{"id": 1},
+			{"id": 2},
+			{"id": 3},
+		]
+		responses.add(responses.GET, expected_url, body=response, status=200)
 		qs = "?q=a%3D1%3Ab%3D2&s=something"
 		keys = {'user': 'test'}
 		params = {'q': 'a=1:b=2', 's': 'something'}
@@ -115,9 +120,13 @@ class ResourceQueryTestCase(unittest.TestCase):
 
 class ResourceCreateTestCase(unittest.TestCase):
 
+	def setUp(self):
+		self.resource = SimpleResource()
 
 	def test_create_simple_resource_with_data(self):
-		pass
+		
+		self.resource.create(data)
+
 
 if __name__ == '__main__':
     unittest.main() 		
