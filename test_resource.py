@@ -112,18 +112,7 @@ class ResourceCreateTestCase(unittest.TestCase):
 
 
 	def test_create_simple_resource_with_data(self):
-
-
-
-
-
-
-
-
-
-
-
-
+		pass
 
 if __name__ == '__main__':
     unittest.main() 		
